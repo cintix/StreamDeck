@@ -9,33 +9,46 @@ U8GLIB_SSD1306_128X32 u8g(U8G_I2C_OPT_NONE);
 
 class Display {
    private:
-    const char *lineOne;
-    const char *lineTwo;
+    const char *statusLine;
+    const char *infoLine;
     int textSize;
+    unsigned long lastUpdateTime;  
+    unsigned long resetTime;       
+
     void draw() {
         u8g.firstPage();
         do {
             u8g.setColorIndex(1);
-            u8g.setFont(u8g_font_7x14B);
             if (textSize == 0) {
-                if (lineOne) u8g.drawStr(0, 10, lineOne);
-                if (lineTwo) u8g.drawStr(0, 24, lineTwo);
+                u8g.setFont(u8g_font_7x14B);
+                if (statusLine) u8g.drawStr(0, 10, statusLine);
+                u8g.setFont(u8g_font_9x15B);
+                if (infoLine) u8g.drawStr(0, 30, infoLine);
             }
-
         } while (u8g.nextPage());
     }
 
    public:
-    Display() : lineOne(nullptr), lineTwo(nullptr), textSize(0) {}
-    void showText(const char *text) {
-        lineOne = text;
-        lineTwo = nullptr;
+    Display() : statusLine(nullptr), infoLine(nullptr), textSize(0), lastUpdateTime(0), resetTime(3000) {}
+
+    void showStatus(const char *text) {
+        statusLine = text;
         draw();
     }
-    void showTexts(const char *text, const char *text2) {
-        lineOne = text;
-        lineTwo = text2;
+
+    void showText(const char *text) {
+        infoLine = text;
+        lastUpdateTime = millis();
         draw();
+    }
+
+    void update() {
+        if (millis() - lastUpdateTime > resetTime) {
+            if (infoLine != nullptr) {
+                infoLine = nullptr;
+                draw();
+            }
+        }
     }
 };
 

@@ -1,8 +1,8 @@
 #include <Arduino.h>
 #include <Communication.h>
+#include <Display.h>
 #include <FastGPIO.h>
 #include <Mapping.h>
-#include <Display.h>
 
 #define DEBUG 0
 
@@ -12,9 +12,9 @@ bool statusLedOn = false;
 
 void blinkError();
 
-Communication protocol;
-Mapping mapping;
 Display display;
+Communication protocol;
+Mapping mapping(display);
 
 void setup() {
     FastGPIO::begin(115200);
@@ -30,18 +30,21 @@ void loop() {
     }
 
     if (protocol.isConnected()) {
-        display.showText("Connected...");
+        display.showStatus("Connected...");
         protocol.checkConnectionHealth();
         if (!statusLedOn) {
             FastGPIO::write(ledPin, HIGH);
             statusLedOn = true;
         }
         mapping.checkButtons();
+        mapping.readPotentiometer();
     } else {
-        display.showText("Not connected...");
+        display.showStatus("Not connected...");
         statusLedOn = false;
         blinkError();  // Blink if not connected
     }
+
+    display.update();
 }
 
 void blinkError() {
