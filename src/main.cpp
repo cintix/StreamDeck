@@ -2,6 +2,7 @@
 #include <Communication.h>
 #include <FastGPIO.h>
 #include <Mapping.h>
+#include <Display.h>
 
 #define DEBUG 0
 
@@ -13,12 +14,12 @@ void blinkError();
 
 Communication protocol;
 Mapping mapping;
+Display display;
 
 void setup() {
     FastGPIO::begin(115200);
     FastGPIO::pinMode(ledPin, OUTPUT);
     FastGPIO::write(ledPin, LOW);  // LED off until connected
-    // analogReadResolution(5);  // Set resolution to 5 bits
 }
 
 void loop() {
@@ -29,6 +30,7 @@ void loop() {
     }
 
     if (protocol.isConnected()) {
+        display.showText("Connected...");
         protocol.checkConnectionHealth();
         if (!statusLedOn) {
             FastGPIO::write(ledPin, HIGH);
@@ -36,6 +38,7 @@ void loop() {
         }
         mapping.checkButtons();
     } else {
+        display.showText("Not connected...");
         statusLedOn = false;
         blinkError();  // Blink if not connected
     }
