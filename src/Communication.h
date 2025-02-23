@@ -20,19 +20,13 @@ class Communication {
     unsigned long lastHeartbeat;
     void (*onCommandReceivedFunction)(byte);
 
-    void checkConnectionHealth() {
-        if (millis() - lastHeartbeat > HEARTBEAT_TIMEOUT) {
-            connected = false;
-        }
-    }
-
    public:
-    Communication() : connected(false), lastHeartbeat(0), onCommandReceivedFunction(nullptr) { FastGPIO::begin(115200); }
+    Communication() : connected(false), lastHeartbeat(0), onCommandReceivedFunction(nullptr) {}
 
     void setEventHandler(void (*onCommandReceived)(byte)) { onCommandReceivedFunction = onCommandReceived; }
     inline bool isConnected() const { return connected; }
     void handleCommunication(byte data) {
-        if (!isConnected() && data == CMD_INIT) {
+        if (!connected && data == CMD_INIT) {
             // Client requests handshake, send ACK with version
             FastGPIO::write(CMD_ACK);
             FastGPIO::write(PROTOCOL_VERSION);
@@ -41,13 +35,18 @@ class Communication {
         } else if (data == CMD_HEARTBEAT) {
             lastHeartbeat = millis();  // Reset heartbeat timer
         } else if (connected) {
-            checkConnectionHealth();
             if (onCommandReceivedFunction) {
                 onCommandReceivedFunction(data);
             }
         } else {
             // If unexpected data is received before handshake, ignore it
             FastGPIO::write(CMD_ERROR);
+        }
+    }
+
+    void checkConnectionHealth() {
+        if (millis() - lastHeartbeat > HEARTBEAT_TIMEOUT) {
+            connected = false;
         }
     }
 };

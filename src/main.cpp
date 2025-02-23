@@ -1,12 +1,12 @@
 #include <Arduino.h>
 #include <Communication.h>
-#include <Mapping.h>
 #include <FastGPIO.h>
+#include <Mapping.h>
 
 #define DEBUG 0
 
 // Hardware Pins
-const int ledPin = 13;
+const int ledPin = 12;
 bool statusLedOn = false;
 
 void blinkError();
@@ -14,11 +14,10 @@ void blinkError();
 Communication protocol;
 Mapping mapping;
 
-
 void setup() {
+    FastGPIO::begin(115200);
     FastGPIO::pinMode(ledPin, OUTPUT);
     FastGPIO::write(ledPin, LOW);  // LED off until connected
-
     // analogReadResolution(5);  // Set resolution to 5 bits
 }
 
@@ -30,6 +29,7 @@ void loop() {
     }
 
     if (protocol.isConnected()) {
+        protocol.checkConnectionHealth();
         if (!statusLedOn) {
             FastGPIO::write(ledPin, HIGH);
             statusLedOn = true;
